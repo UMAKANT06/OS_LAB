@@ -31,6 +31,7 @@
 
 Scheduler::Scheduler() {
     readyList = new List<Thread *>;
+    sleepList = new List<Thread *>;
     toBeDestroyed = NULL;
 }
 
@@ -39,7 +40,10 @@ Scheduler::Scheduler() {
 // 	De-allocate the list of ready threads.
 //----------------------------------------------------------------------
 
-Scheduler::~Scheduler() { delete readyList; }
+Scheduler::~Scheduler() {
+    delete readyList;
+    delete sleepList;
+}
 
 //----------------------------------------------------------------------
 // Scheduler::ReadyToRun
@@ -54,7 +58,9 @@ void Scheduler::ReadyToRun(Thread *thread) {
     DEBUG(dbgThread, "Putting thread on ready list: " << thread->getName());
 
     thread->setStatus(READY);
-    readyList->Append(thread);
+    if(!readyList->IsInList(thread)){
+        readyList->Append(thread);
+    }
 }
 
 //----------------------------------------------------------------------
@@ -163,4 +169,43 @@ void Scheduler::CheckToBeDestroyed() {
 void Scheduler::Print() {
     cout << "Ready list contents:\n";
     readyList->Apply(ThreadPrint);
+}
+
+
+
+
+void Scheduler::Sleep(Thread *thread, int ticks) {
+    ASSERT(kernel->interrupt->getLevel() ==
+           IntOff);  // check kar rha hai ki iterrupt off hai ya nahi
+    DEBUG(dbgThread, "putting thread to sleep: " << thread->getName());
+
+    thread->setStatus(BLOCKED);          // ab us process ko block kar dia
+    thread->setTicksUntilWakeup(ticks);  // utne ticks ke liye
+
+    if (readyList->IsInList(thread))
+        readyList->Remove(thread);  // agr readylist mein hai toh remove kar
+                                    // dega
+    if (!sleepList->IsInList(thread))
+        sleepList->Append(thread);  // agr sleeplist mein nahi hai toh add kar
+                                    // dega sleeplist mein
+}
+
+void Scheduler::WakeUp() {
+    ASSERT(kernel->interrupt->getLevel() ==
+           IntOff);  // check kar rha hai ki iterrupt off hai ya nahi
+    DEBUG(dbgThread, "Waking up threads");
+
+    ListIterator<Thread *> *iter = new ListIterator<Thread *>(sleepList);
+    for (; !iter->IsDone(); iter->Next()) {
+        Thread *thread = iter->Item();
+        if (thread->getTicksUntilWakeup() == 0) {
+            sleepList->Remove(thread);
+            thread->setStatus(READY);
+            if (!readyList->IsInList(thread)) readyList->Append(thread);
+
+        } else {
+            thread->setTicksUntilWakeup(thread->getTicksUntilWakeup() - 1);
+        }
+    }
+    delete iter;
 }

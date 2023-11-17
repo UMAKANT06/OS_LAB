@@ -397,7 +397,8 @@ void handle_SC_GetPid() {
 // user defined case handling functions
 
 void handle_SC_UpperCase() {
-    int memptr = kernel->machine->ReadRegister(4);//read address of the string
+    int memptr = kernel->machine->ReadRegister(4);  // read address of the
+                                                    // string
     char* buffer = stringUser2System(memptr);
     int length = strlen(buffer);
     for (int i = 0; i < length; i++) {
@@ -407,6 +408,19 @@ void handle_SC_UpperCase() {
     }
     SysPrintString(buffer, strlen(buffer));
     delete[] buffer;
+    return move_program_counter();
+}
+
+void handle_SC_ThreadSleep() {
+    int ticks = kernel->machine->ReadRegister(4);
+    IntStatus oldLevel = kernel->interrupt->SetLevel(
+        IntOff);  // interupt ko off kar dete hai phele hi sleep mein bhejne se
+                  // phele
+    Thread* oldThread = kernel->currentThread;
+    kernel->scheduler->Sleep(oldThread, ticks);
+    kernel->scheduler->Run(kernel->scheduler->FindNextToRun(), false);
+    
+    (void)kernel->interrupt->SetLevel(oldLevel);
     return move_program_counter();
 }
 
@@ -479,6 +493,8 @@ void ExceptionHandler(ExceptionType which) {
                     return handle_SC_GetPid();
                 case SC_UpperCase:
                     return handle_SC_UpperCase();
+                case SC_ThreadSleep:
+                    return handle_SC_ThreadSleep();
                 /**
                  * Handle all not implemented syscalls
                  * If you want to write a new handler for syscall:

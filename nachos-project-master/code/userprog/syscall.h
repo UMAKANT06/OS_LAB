@@ -52,6 +52,7 @@
 // user defined
 
 #define SC_UpperCase 57
+#define SC_ThreadSleep 59
 
 
 #ifndef IN_ASM
@@ -210,12 +211,14 @@ void ThreadYield();
  */
 int ThreadJoin(ThreadId id);
 
-void PrintUpperCase(char* buffer);
+void PrintUpperCases(char* buffer);
 
 /*
  * Deletes current thread and returns ExitCode to every waiting lokal thread.
  */
 void ThreadExit(int ExitCode);
+
+void ThreadSleep(int ticks);
 
 #endif /* IN_ASM */
 
