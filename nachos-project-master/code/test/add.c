@@ -12,6 +12,6 @@ int main() {
 
     result = Add(42, 23);
 
-    Halt();
+    PrintNum(result);
     /* not reached */
 }
