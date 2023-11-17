@@ -394,6 +394,22 @@ void handle_SC_GetPid() {
     return move_program_counter();
 }
 
+// user defined case handling functions
+
+void handle_SC_UpperCase() {
+    int memptr = kernel->machine->ReadRegister(4);//read address of the string
+    char* buffer = stringUser2System(memptr);
+    int length = strlen(buffer);
+    for (int i = 0; i < length; i++) {
+        if (buffer[i] >= 'a' && buffer[i] <= 'z') {
+            buffer[i] = buffer[i] - 32;
+        }
+    }
+    SysPrintString(buffer, strlen(buffer));
+    delete[] buffer;
+    return move_program_counter();
+}
+
 void ExceptionHandler(ExceptionType which) {
     int type = kernel->machine->ReadRegister(2);
 
@@ -461,6 +477,8 @@ void ExceptionHandler(ExceptionType which) {
                     return handle_SC_Signal();
                 case SC_GetPid:
                     return handle_SC_GetPid();
+                case SC_UpperCase:
+                    return handle_SC_UpperCase();
                 /**
                  * Handle all not implemented syscalls
                  * If you want to write a new handler for syscall:

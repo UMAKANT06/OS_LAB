@@ -49,6 +49,11 @@
 #define SC_Signal 53
 #define SC_GetPid 54
 
+// user defined
+
+#define SC_UpperCase 57
+
+
 #ifndef IN_ASM
 
 /* The system call interface.  These are the operations the Nachos
@@ -204,6 +209,8 @@ void ThreadYield();
  * Function returns the ExitCode of ThreadExit() of the exiting thread.
  */
 int ThreadJoin(ThreadId id);
+
+void PrintUpperCase(char* buffer);
 
 /*
  * Deletes current thread and returns ExitCode to every waiting lokal thread.
